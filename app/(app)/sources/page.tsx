@@ -238,12 +238,56 @@ function AddSourceModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
   );
 }
 
+// ── Edit Source Modal ────────────────────────────────────────────────────────
+
+function EditSourceModal({ source, onClose, onSaved }: { source: Source; onClose: () => void; onSaved: () => void }) {
+  const [label, setLabel] = useState(source.label);
+  const [category, setCategory] = useState(source.category ?? "");
+  const [interval, setInterval] = useState(String(source.fetchIntervalMinutes));
+  const [autoTranscript, setAutoTranscript] = useState(source.autoFetchTranscript);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSave() {
+    setSaving(true);
+    const res = await fetch(`/api/sources/${source.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        label,
+        category: category || null,
+        fetchIntervalMinutes: parseInt(interval),
+        autoFetchTranscript: autoTranscript,
+      }),
+    });
+    if (res.ok) { onSaved(); }
+    else { setError((await res.json()).error ?? "Failed to save"); setSaving(false); }
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Edit Source"
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button onClick={handleSave} disabled={!label || saving}>{saving ? <><Spinner className="w-4 h-4" /> Saving…</> : "Save"}</Button></>}
+    >
+      <div className="space-y-4">
+        <Input label="Label" value={label} onChange={(e) => setLabel(e.target.value)} />
+        <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)} options={CATEGORY_OPTIONS} />
+        <Select label="Fetch interval" value={interval} onChange={(e) => setInterval(e.target.value)} options={INTERVAL_OPTIONS} />
+        {source.type === "YOUTUBE" && (
+          <Toggle checked={autoTranscript} onChange={setAutoTranscript} label="Auto-fetch transcript for new videos" />
+        )}
+        {error && <p className="text-sm text-red-400">{error}</p>}
+      </div>
+    </Modal>
+  );
+}
+
 // ── Source Card ──────────────────────────────────────────────────────────────
 
 function SourceCard({ source, onRefresh }: { source: Source; onRefresh: () => void }) {
   const [refreshing, setRefreshing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   async function handleToggle() {
     await fetch(`/api/sources/${source.id}`, {
@@ -299,6 +343,7 @@ function SourceCard({ source, onRefresh }: { source: Source; onRefresh: () => vo
         <Button variant="ghost" size="sm" onClick={handleRefreshNow} disabled={refreshing}>
           {refreshing ? <Spinner className="w-3 h-3" /> : "↻"} Refresh
         </Button>
+        <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit</Button>
         {!confirmDelete ? (
           <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
             Delete
@@ -312,6 +357,13 @@ function SourceCard({ source, onRefresh }: { source: Source; onRefresh: () => vo
           <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>Cancel</Button>
         )}
       </div>
+      {editing && (
+        <EditSourceModal
+          source={source}
+          onClose={() => setEditing(false)}
+          onSaved={() => { setEditing(false); onRefresh(); }}
+        />
+      )}
     </div>
   );
 }
