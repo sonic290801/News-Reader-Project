@@ -24,8 +24,8 @@ A personal news aggregator with AI summaries. Pulls from RSS feeds, Reddit, YouT
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/<you>/news-reader.git
-cd news-reader
+git clone https://github.com/sonic290801/News-Reader-Project.git
+cd News-Reader-Project
 npm install
 ```
 
@@ -58,8 +58,6 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
-The seed creates three sources: r/worldnews, pizzint.com, and The Enforcer (YouTube).
-
 ### 5. Start the dev server
 
 ```bash
@@ -70,8 +68,6 @@ Open [http://localhost:3000](http://localhost:3000) and log in with `AUTH_PASSWO
 
 ### 6. Ollama (optional)
 
-Install a model and start Ollama:
-
 ```bash
 ollama pull qwen2.5:14b
 ollama serve
@@ -81,42 +77,19 @@ In Settings, set Provider to **Ollama** and verify the connection.
 
 ---
 
-## Deploying to Netlify
+## Netlify Deployment
 
-### Database: Neon (free tier)
-
-1. Sign up at [neon.tech](https://neon.tech)
-2. Create a project and copy the connection string (looks like `postgresql://user:pass@host/dbname?sslmode=require`)
-
-### Netlify setup
-
-1. Push this repo to GitHub
-2. In Netlify: **Add new site → Import from Git → GitHub**
-3. Select the repo, branch `main` — build settings come from `netlify.toml` automatically
-4. Go to **Site Settings → Environment Variables** and add:
+### Environment variables
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | Neon connection string |
-| `AUTH_PASSWORD` | password to share with your tutor |
-| `AUTH_SECRET` | `openssl rand -hex 32` |
-| `GEMINI_API_KEY` | from [aistudio.google.com](https://aistudio.google.com) (free) |
+| `DATABASE_URL` | PostgreSQL connection string (e.g. Neon) |
+| `AUTH_PASSWORD` | Login password |
+| `AUTH_SECRET` | Random 32-char string (`openssl rand -hex 32`) |
+| `GEMINI_API_KEY` | From [aistudio.google.com](https://aistudio.google.com) (free) |
 | `AI_PROVIDER` | `gemini` |
 
-5. **Trigger deploy** — Netlify runs `prisma generate && prisma migrate deploy && next build`
-6. After deploy succeeds, run the seed once via the Netlify CLI or a one-off function invocation:
-
-```bash
-# Using Netlify CLI
-netlify env:set DATABASE_URL "your-neon-url"
-npx prisma db seed
-```
-
-Or manually add sources through the Sources page after first login.
-
-### Sharing with your tutor
-
-Give them the `.netlify.app` URL and the `AUTH_PASSWORD` value.
+Build settings are read from `netlify.toml` automatically.
 
 ---
 
@@ -140,5 +113,5 @@ prisma/
 
 ## Scheduled ingest
 
-- **Local**: `node-cron` starts automatically via Next.js instrumentation hook on server boot
-- **Netlify**: `netlify/functions/scheduled-ingest.ts` runs on `0 * * * *` (hourly)
+- **Local**: node-cron starts automatically on server boot via Next.js instrumentation hook
+- **Netlify**: `netlify/functions/scheduled-ingest.ts` runs hourly (`0 * * * *`)
