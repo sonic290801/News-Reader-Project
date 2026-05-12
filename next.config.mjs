@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
   experimental: {
     instrumentationHook: true,
   },
+  serverExternalPackages: ["jsdom", "@mozilla/readability"],
 };
 
 export default nextConfig;
