@@ -7,12 +7,11 @@ export async function getProvider(): Promise<AIProvider> {
   const settings = await getSettings();
 
   if (settings.aiProvider === "ollama") {
-    const ollama = new OllamaProvider(
+    // Trust the user's explicit choice — skip availability check
+    return new OllamaProvider(
       settings.ollamaBaseUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434",
       settings.ollamaModel || process.env.OLLAMA_MODEL || "qwen2.5:14b"
     );
-    if (await ollama.isAvailable()) return ollama;
-    console.warn("[ai] Ollama unavailable — falling back to Gemini");
   }
 
   const gemini = new GeminiProvider();
