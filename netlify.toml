@@ -1,0 +1,14 @@
+[build]
+  command = "npx prisma generate && npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[scheduled_functions]]
+  name = "scheduled-ingest"
+  schedule = "0 * * * *"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"

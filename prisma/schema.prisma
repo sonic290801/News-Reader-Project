@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────────
+
+enum SourceType {
+  RSS
+  REDDIT
+  YOUTUBE
+  WEB
+}
+
+enum ContentType {
+  ARTICLE
+  REDDIT_POST
+  YOUTUBE_EPISODE
+}
+
+enum SummaryType {
+  SINGLE
+  DIGEST
+  CROSS_SOURCE
+}
+
+// ── Models ───────────────────────────────────────────────────────────────────
+
+model Source {
+  id                   String        @id @default(cuid())
+  type                 SourceType
+  url                  String        @unique
+  channelId            String?
+  label                String
+  category             String?
+  fetchIntervalMinutes Int           @default(60)
+  autoFetchTranscript  Boolean       @default(false)
+  enabled              Boolean       @default(true)
+  selectorConfig       String?
+  lastFetchedAt        DateTime?
+  lastErrorAt          DateTime?
+  lastErrorMsg         String?
+  createdAt            DateTime      @default(now())
+  items                ContentItem[]
+}
+
+model ContentItem {
+  id              String       @id @default(cuid())
+  sourceId        String
+  source          Source       @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  type            ContentType
+  url             String       @unique
+  title           String
+  author          String?
+  publishedAt     DateTime?
+  excerpt         String?      @db.Text
+  fullText        String?      @db.Text
+  transcript      String?      @db.Text
+  thumbnailUrl    String?
+  durationSeconds Int?
+  isRead          Boolean      @default(false)
+  isBookmarked    Boolean      @default(false)
+  fetchedAt       DateTime     @default(now())
+  summaries       AISummary[]  @relation("SummaryItems")
+
+  @@index([sourceId])
+  @@index([isRead])
+  @@index([publishedAt])
+  @@index([type])
+}
+
+model AISummary {
+  id        String        @id @default(cuid())
+  type      SummaryType
+  provider  String
+  model     String
+  summary   String        @db.Text
+  analysis  String?       @db.Text
+  createdAt DateTime      @default(now())
+  items     ContentItem[] @relation("SummaryItems")
+}
+
+model Settings {
+  id            String  @id @default("singleton")
+  aiProvider    String  @default("ollama")
+  ollamaBaseUrl String  @default("http://localhost:11434")
+  ollamaModel   String  @default("qwen2.5:14b")
+  geminiApiKey  String?
+  summaryDepth  String  @default("standard")
+  showAnalysis  Boolean @default(true)
+  retentionDays Int     @default(30)
+}
+
+model KeywordAlert {
+  id        String   @id @default(cuid())
+  keyword   String   @unique
+  createdAt DateTime @default(now())
+}
