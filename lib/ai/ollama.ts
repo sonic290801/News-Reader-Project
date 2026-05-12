@@ -6,13 +6,10 @@ import { SYSTEM_PROMPT, buildPrompt } from "./prompts";
 export class OllamaProvider implements AIProvider {
   name = "ollama";
 
-  private get baseUrl() {
-    return process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
-  }
-
-  private get model() {
-    return process.env.OLLAMA_MODEL ?? "qwen2.5:14b";
-  }
+  constructor(
+    private readonly baseUrl: string = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434",
+    private readonly model: string = process.env.OLLAMA_MODEL ?? "qwen2.5:14b"
+  ) {}
 
   async isAvailable(): Promise<boolean> {
     try {

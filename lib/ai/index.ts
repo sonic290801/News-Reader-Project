@@ -3,18 +3,19 @@ import { OllamaProvider } from "./ollama";
 import { GeminiProvider } from "./gemini";
 import { AIProvider } from "./types";
 
-const ollama = new OllamaProvider();
-const gemini = new GeminiProvider();
-
 export async function getProvider(): Promise<AIProvider> {
   const settings = await getSettings();
 
   if (settings.aiProvider === "ollama") {
+    const ollama = new OllamaProvider(
+      settings.ollamaBaseUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+      settings.ollamaModel || process.env.OLLAMA_MODEL || "qwen2.5:14b"
+    );
     if (await ollama.isAvailable()) return ollama;
-    // Fall through to Gemini if Ollama is unavailable
     console.warn("[ai] Ollama unavailable — falling back to Gemini");
   }
 
+  const gemini = new GeminiProvider();
   if (await gemini.isAvailable()) return gemini;
 
   throw new Error(
