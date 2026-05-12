@@ -1,6 +1,4 @@
 import axios from "axios";
-import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -26,6 +24,8 @@ export async function extractFullText(
       responseType: "text",
     });
 
+    const { JSDOM } = await import("jsdom");
+    const { Readability } = await import("@mozilla/readability");
     const dom = new JSDOM(html, { url });
     const article = new Readability(dom.window.document).parse();
 
