@@ -1,7 +1,5 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
 import { Source } from "@prisma/client";
 import { upsertItem } from "@/lib/db/items";
 import { updateSourceHealth } from "@/lib/db/sources";
@@ -96,6 +94,8 @@ export async function extractArticle(url: string): Promise<ArticleData | null> {
       responseType: "text",
     });
 
+    const { JSDOM } = await import("jsdom");
+    const { Readability } = await import("@mozilla/readability");
     const dom = new JSDOM(html, { url });
     const article = new Readability(dom.window.document).parse();
     if (!article) return null;
@@ -114,7 +114,7 @@ export async function extractArticle(url: string): Promise<ArticleData | null> {
   }
 }
 
-function extractPublishedDate(html: string, dom: JSDOM): Date | undefined {
+function extractPublishedDate(html: string, dom: InstanceType<typeof import("jsdom").JSDOM>): Date | undefined {
   // Try <time datetime="...">
   const timeEl = dom.window.document.querySelector("time[datetime]");
   if (timeEl) {
