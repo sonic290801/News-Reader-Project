@@ -15,10 +15,10 @@ export class GeminiProvider implements AIProvider {
 
   async *summarise(input: SummariseInput): AsyncIterable<string> {
     const genAI = new GoogleGenerativeAI(this.apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      systemInstruction: SYSTEM_PROMPT,
-    });
+    const model = genAI.getGenerativeModel(
+      { model: "gemini-1.5-flash", systemInstruction: SYSTEM_PROMPT },
+      { apiVersion: "v1" }
+    );
 
     const prompt = buildPrompt(input);
     const result = await model.generateContentStream(prompt);
