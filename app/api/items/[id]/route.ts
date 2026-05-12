@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { markBookmarked } from "@/lib/db/items";
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const item = await prisma.contentItem.findUnique({
+    where: { id: params.id },
+    include: { source: { select: { label: true, type: true } } },
+  });
+  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(item);
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

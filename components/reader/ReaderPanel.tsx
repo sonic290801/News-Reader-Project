@@ -149,7 +149,32 @@ export default function ReaderPanel({
   onBookmark: () => void;
 }) {
   const { ai, start } = useAISummary();
-  const content = item.transcript ?? item.fullText ?? item.excerpt ?? "";
+  const [transcript, setTranscript] = useState(item.transcript);
+  const [fetchingTranscript, setFetchingTranscript] = useState(false);
+  const [transcriptError, setTranscriptError] = useState("");
+  const content = transcript ?? item.fullText ?? item.excerpt ?? "";
+
+  async function handleFetchTranscript() {
+    setFetchingTranscript(true);
+    setTranscriptError("");
+    const res = await fetch("/api/ingest/transcript", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId: item.id }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      // Reload the item to get the transcript
+      const itemRes = await fetch(`/api/items/${item.id}`);
+      if (itemRes.ok) {
+        const updated = await itemRes.json();
+        setTranscript(updated.transcript);
+      }
+    } else {
+      setTranscriptError(data.reason ?? "Failed to fetch transcript");
+    }
+    setFetchingTranscript(false);
+  }
   const wordCount = content.split(/\s+/).filter(Boolean).length;
 
   useEffect(() => {
@@ -246,6 +271,16 @@ export default function ReaderPanel({
                 </a>{" "}
                 to read.
               </p>
+            )}
+
+            {/* Fetch transcript button for YouTube episodes */}
+            {item.type === "YOUTUBE_EPISODE" && !transcript && (
+              <div className="space-y-2">
+                <Button variant="secondary" size="sm" onClick={handleFetchTranscript} disabled={fetchingTranscript}>
+                  {fetchingTranscript ? <><Spinner className="w-3 h-3" /> Fetching transcript…</> : "Fetch transcript"}
+                </Button>
+                {transcriptError && <p className="text-xs text-red-400">{transcriptError}</p>}
+              </div>
             )}
 
             <hr className="border-slate-800" />
