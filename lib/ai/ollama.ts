@@ -15,7 +15,7 @@ export class OllamaProvider implements AIProvider {
     try {
       const res = await axios.get<{ models: Array<{ name: string }> }>(
         `${this.baseUrl}/api/tags`,
-        { timeout: 3000, headers: { "ngrok-skip-browser-warning": "1" } }
+        { timeout: 10000, headers: { "ngrok-skip-browser-warning": "1" } }
       );
       return res.data.models.some((m) =>
         m.name.startsWith(this.model.split(":")[0])
